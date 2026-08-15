@@ -1,0 +1,181 @@
+.ebsp-admin-wrap {
+    max-width: 1200px;
+    margin-top: 20px;
+}
+
+.ebsp-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.ebsp-form-section {
+    flex: 1;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ebsp-preview-section {
+    flex: 1;
+}
+
+.ebsp-field {
+    margin-bottom: 15px;
+}
+
+.ebsp-field label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ebsp-field input[type="text"],
+.ebsp-field select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.ebsp-image-manager {
+    margin-top: 8px;
+}
+
+.ebsp-image-mapped {
+    color: #46b450;
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.ebsp-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.ebsp-modal {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ebsp-modal.hidden {
+    display: none;
+}
+
+.ebsp-canvas-container {
+    width: 100%;
+    max-width: 360px; /* Scale down 1080 for preview */
+    margin: 0 auto 20px;
+    aspect-ratio: 9/16;
+    background: #eee;
+    border: 1px solid #ddd;
+}
+
+#ebsp-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.ebsp-caption-container {
+    margin-bottom: 20px;
+}
+
+.ebsp-caption-container label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ebsp-caption-container textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.ebsp-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+#ebsp-status {
+    margin-top: 15px;
+    font-weight: 600;
+    color: #0073aa;
+}
+
+/* Presets Management Styles */
+.ebsp-presets-layout {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.ebsp-preset-section {
+    flex: 1;
+    min-width: 300px;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ebsp-preset-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 20px 0;
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #eee;
+    border-radius: 4px;
+}
+
+.ebsp-preset-list li {
+    display: flex;
+    gap: 10px;
+    padding: 8px;
+    border-bottom: 1px solid #eee;
+    align-items: center;
+}
+
+.ebsp-preset-list li:last-child {
+    border-bottom: none;
+}
+
+.ebsp-preset-input {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid transparent;
+}
+
+.ebsp-preset-input:hover, .ebsp-preset-input:focus {
+    border: 1px solid #ccc;
+    background: #f9f9f9;
+}
+
+.btn-delete-preset {
+    color: #d63638;
+}
+
+.ebsp-preset-add {
+    display: flex;
+    gap: 10px;
+}
+
+.ebsp-preset-add input {
+    flex: 1;
+    padding: 6px;
+}
+
+#ebsp-presets-status {
+    margin-top: 20px;
+    font-weight: bold;
+    color: #0073aa;
+}
