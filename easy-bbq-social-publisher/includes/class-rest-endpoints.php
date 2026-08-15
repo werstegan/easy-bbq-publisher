@@ -35,14 +35,77 @@ class EBSP_REST_Endpoints {
             'callback'            => array( $this, 'generate_images' ),
             'permission_callback' => array( $this, 'check_permission' )
         ) );
+
+        register_rest_route( 'ebsp/v1', '/presets', array(
+            'methods'             => WP_REST_Server::READABLE,
+            'callback'            => array( $this, 'get_presets' ),
+            'permission_callback' => array( $this, 'check_permission' )
+        ) );
+
+        register_rest_route( 'ebsp/v1', '/presets', array(
+            'methods'             => WP_REST_Server::CREATABLE,
+            'callback'            => array( $this, 'update_presets' ),
+            'permission_callback' => array( $this, 'check_permission' )
+        ) );
     }
 
     public function check_permission() {
         return current_user_can( 'manage_options' );
     }
 
+    public function get_presets( WP_REST_Request $request ) {
+        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
+        return new WP_REST_Response( $presets, 200 );
+    }
+
+    public function update_presets( WP_REST_Request $request ) {
+        $params = $request->get_json_params();
+
+        $presets = array(
+            'starters' => array_map('sanitize_text_field', $params['starters'] ?? array()),
+            'mains'    => array_map('sanitize_text_field', $params['mains'] ?? array()),
+            'drinks'   => array_map('sanitize_text_field', $params['drinks'] ?? array())
+        );
+
+        update_option( 'ebsp_presets', $presets );
+
+        return new WP_REST_Response( array( 'message' => 'Presets updated', 'presets' => $presets ), 200 );
+    }
+
     public function generate_images( WP_REST_Request $request ) {
         $params = $request->get_json_params();
+
+        // Auto-learn new dishes
+        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
+        $updated_presets = false;
+
+        $starter_title = sanitize_text_field( $params['starter_title'] ?? '' );
+        if ( !empty($starter_title) && !in_array($starter_title, $presets['starters']) ) {
+            $presets['starters'][] = $starter_title;
+            $updated_presets = true;
+        }
+
+        $main1_title = sanitize_text_field( $params['main1_title'] ?? '' );
+        if ( !empty($main1_title) && !in_array($main1_title, $presets['mains']) ) {
+            $presets['mains'][] = $main1_title;
+            $updated_presets = true;
+        }
+
+        $main2_title = sanitize_text_field( $params['main2_title'] ?? '' );
+        if ( !empty($main2_title) && !in_array($main2_title, $presets['mains']) ) {
+            $presets['mains'][] = $main2_title;
+            $updated_presets = true;
+        }
+
+        $drink = sanitize_text_field( $params['drink'] ?? '' );
+        if ( !empty($drink) && !in_array($drink, $presets['drinks']) ) {
+            $presets['drinks'][] = $drink;
+            $updated_presets = true;
+        }
+
+        if ( $updated_presets ) {
+            update_option( 'ebsp_presets', $presets );
+        }
 
         $images = array(
             'starter' => '',

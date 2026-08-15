@@ -23,6 +23,15 @@ class EBSP_Admin_Page {
 
         add_submenu_page(
             'easy-bbq-publisher',
+            'Gestion des Cartes & Plats',
+            'Gestion des Cartes',
+            'manage_options',
+            'easy-bbq-presets',
+            array( $this, 'render_presets_page' )
+        );
+
+        add_submenu_page(
+            'easy-bbq-publisher',
             'Settings',
             'Settings',
             'manage_options',
@@ -32,7 +41,7 @@ class EBSP_Admin_Page {
     }
 
     public function enqueue_scripts( $hook ) {
-        if ( $hook !== 'toplevel_page_easy-bbq-publisher' && $hook !== 'easy-bbq-publisher_page_easy-bbq-settings' ) {
+        if ( ! in_array( $hook, array('toplevel_page_easy-bbq-publisher', 'easy-bbq-publisher_page_easy-bbq-settings', 'easy-bbq-publisher_page_easy-bbq-presets') ) ) {
             return;
         }
 
@@ -46,6 +55,14 @@ class EBSP_Admin_Page {
                 'restUrl' => esc_url_raw( rest_url( 'ebsp/v1/' ) ),
                 'nonce'   => wp_create_nonce( 'wp_rest' ),
                 'pluginUrl' => EBSP_PLUGIN_URL
+            ) );
+        }
+
+        if ( $hook === 'easy-bbq-publisher_page_easy-bbq-presets' ) {
+            wp_enqueue_script( 'ebsp-admin-presets', EBSP_PLUGIN_URL . 'assets/js/admin-presets.js', array(), EBSP_PLUGIN_VERSION, true );
+            wp_localize_script( 'ebsp-admin-presets', 'ebspSettings', array(
+                'restUrl' => esc_url_raw( rest_url( 'ebsp/v1/' ) ),
+                'nonce'   => wp_create_nonce( 'wp_rest' )
             ) );
         }
     }
@@ -86,7 +103,48 @@ class EBSP_Admin_Page {
         <?php
     }
 
+    public function render_presets_page() {
+        ?>
+        <div class="wrap ebsp-admin-wrap">
+            <h1>Gestion des Cartes & Plats</h1>
+            <p>Manage the preset lists for Starters, Main Courses, and Drinks.</p>
+
+            <div class="ebsp-presets-layout">
+                <div class="ebsp-preset-section" data-type="starters">
+                    <h2>Entrées (Starters)</h2>
+                    <ul class="ebsp-preset-list"></ul>
+                    <div class="ebsp-preset-add">
+                        <input type="text" placeholder="Nouvelle entrée">
+                        <button type="button" class="button btn-add-preset">+ Ajouter</button>
+                    </div>
+                </div>
+
+                <div class="ebsp-preset-section" data-type="mains">
+                    <h2>Plats (Main Courses)</h2>
+                    <ul class="ebsp-preset-list"></ul>
+                    <div class="ebsp-preset-add">
+                        <input type="text" placeholder="Nouveau plat">
+                        <button type="button" class="button btn-add-preset">+ Ajouter</button>
+                    </div>
+                </div>
+
+                <div class="ebsp-preset-section" data-type="drinks">
+                    <h2>Boissons (Drinks)</h2>
+                    <ul class="ebsp-preset-list"></ul>
+                    <div class="ebsp-preset-add">
+                        <input type="text" placeholder="Nouvelle boisson">
+                        <button type="button" class="button btn-add-preset">+ Ajouter</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ebsp-presets-status"></div>
+        </div>
+        <?php
+    }
+
     public function render_admin_page() {
+        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
         ?>
         <div class="wrap ebsp-admin-wrap">
             <h1>Menu Creation</h1>
@@ -108,7 +166,12 @@ class EBSP_Admin_Page {
 
                         <div class="ebsp-field">
                             <label for="ebsp-starter-title">Starter (De Primero) - Title</label>
-                            <input type="text" id="ebsp-starter-title" name="starter_title" required>
+                            <input type="text" list="ebsp-list-starters" id="ebsp-starter-title" name="starter_title" required>
+                            <datalist id="ebsp-list-starters">
+                                <?php foreach( $presets['starters'] as $item ) : ?>
+                                    <option value="<?php echo esc_attr( $item ); ?>"></option>
+                                <?php endforeach; ?>
+                            </datalist>
                         </div>
 
                         <div class="ebsp-field">
@@ -118,7 +181,12 @@ class EBSP_Admin_Page {
 
                         <div class="ebsp-field">
                             <label for="ebsp-main1-title">Main Course 1 (De Segundo) - Title</label>
-                            <input type="text" id="ebsp-main1-title" name="main1_title" required>
+                            <input type="text" list="ebsp-list-mains" id="ebsp-main1-title" name="main1_title" required>
+                            <datalist id="ebsp-list-mains">
+                                <?php foreach( $presets['mains'] as $item ) : ?>
+                                    <option value="<?php echo esc_attr( $item ); ?>"></option>
+                                <?php endforeach; ?>
+                            </datalist>
                         </div>
 
                         <div class="ebsp-field">
@@ -128,7 +196,7 @@ class EBSP_Admin_Page {
 
                         <div class="ebsp-field">
                             <label for="ebsp-main2-title">Main Course 2 - Title</label>
-                            <input type="text" id="ebsp-main2-title" name="main2_title" required>
+                            <input type="text" list="ebsp-list-mains" id="ebsp-main2-title" name="main2_title" required>
                         </div>
 
                         <div class="ebsp-field">
@@ -138,7 +206,12 @@ class EBSP_Admin_Page {
 
                         <div class="ebsp-field">
                             <label for="ebsp-drink">Drink (Bebida)</label>
-                            <input type="text" id="ebsp-drink" name="drink" required>
+                            <input type="text" list="ebsp-list-drinks" id="ebsp-drink" name="drink" required>
+                            <datalist id="ebsp-list-drinks">
+                                <?php foreach( $presets['drinks'] as $item ) : ?>
+                                    <option value="<?php echo esc_attr( $item ); ?>"></option>
+                                <?php endforeach; ?>
+                            </datalist>
                         </div>
 
                         <div class="ebsp-field">
