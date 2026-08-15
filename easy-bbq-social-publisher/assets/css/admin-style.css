@@ -39,16 +39,6 @@
     border-radius: 4px;
 }
 
-.ebsp-image-manager {
-    margin-top: 8px;
-}
-
-.ebsp-image-mapped {
-    color: #46b450;
-    font-weight: 500;
-    font-size: 13px;
-}
-
 .ebsp-actions {
     display: flex;
     gap: 10px;
@@ -178,29 +168,4 @@
     margin-top: 20px;
     font-weight: bold;
     color: #0073aa;
-}
-
-/* Batch Generator Styles */
-.ebsp-batch-generator-section {
-    background: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    max-width: 800px;
-}
-
-.ebsp-progress-bar-wrap {
-    width: 100%;
-    background-color: #f1f1f1;
-    border-radius: 4px;
-    overflow: hidden;
-    height: 25px;
-    margin-bottom: 10px;
-}
-
-.ebsp-progress-bar {
-    height: 100%;
-    background-color: #46b450;
-    width: 0%;
-    transition: width 0.3s ease;
 }

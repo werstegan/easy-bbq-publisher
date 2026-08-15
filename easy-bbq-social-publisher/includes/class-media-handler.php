@@ -10,12 +10,9 @@ class EBSP_Media_Handler {
         require_once( ABSPATH . 'wp-admin/includes/media.php' );
         require_once( ABSPATH . 'wp-admin/includes/image.php' );
 
-        $upload_overrides = array(
-            'test_form' => false,
-            'test_uploaded_file' => false
-        );
+        $upload_overrides = array( 'test_form' => false );
 
-        $movefile = wp_handle_sideload( $file_array, $upload_overrides );
+        $movefile = wp_handle_upload( $file_array, $upload_overrides );
 
         if ( $movefile && ! isset( $movefile['error'] ) ) {
             $attachment = array(
