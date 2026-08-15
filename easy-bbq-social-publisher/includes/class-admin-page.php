@@ -144,7 +144,10 @@ class EBSP_Admin_Page {
     }
 
     public function render_admin_page() {
-        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
+        // Ensure presets is always an array with the expected keys to avoid notices
+        $defaults = array( 'starters' => array(), 'mains' => array(), 'drinks' => array() );
+        $presets_option = get_option( 'ebsp_presets', array() );
+        $presets = wp_parse_args( is_array( $presets_option ) ? $presets_option : array(), $defaults );
         ?>
         <div class="wrap ebsp-admin-wrap">
             <h1>Menu Creation</h1>
@@ -168,7 +171,7 @@ class EBSP_Admin_Page {
                             <label for="ebsp-starter-title">Starter (De Primero) - Title</label>
                             <input type="text" list="ebsp-list-starters" id="ebsp-starter-title" name="starter_title" required>
                             <datalist id="ebsp-list-starters">
-                                <?php foreach( $presets['starters'] as $item ) : ?>
+                                <?php foreach( (array) $presets['starters'] as $item ) : ?>
                                     <option value="<?php echo esc_attr( $item ); ?>"></option>
                                 <?php endforeach; ?>
                             </datalist>
@@ -183,7 +186,7 @@ class EBSP_Admin_Page {
                             <label for="ebsp-main1-title">Main Course 1 (De Segundo) - Title</label>
                             <input type="text" list="ebsp-list-mains" id="ebsp-main1-title" name="main1_title" required>
                             <datalist id="ebsp-list-mains">
-                                <?php foreach( $presets['mains'] as $item ) : ?>
+                                <?php foreach( (array) $presets['mains'] as $item ) : ?>
                                     <option value="<?php echo esc_attr( $item ); ?>"></option>
                                 <?php endforeach; ?>
                             </datalist>
@@ -208,7 +211,7 @@ class EBSP_Admin_Page {
                             <label for="ebsp-drink">Drink (Bebida)</label>
                             <input type="text" list="ebsp-list-drinks" id="ebsp-drink" name="drink" required>
                             <datalist id="ebsp-list-drinks">
-                                <?php foreach( $presets['drinks'] as $item ) : ?>
+                                <?php foreach( (array) $presets['drinks'] as $item ) : ?>
                                     <option value="<?php echo esc_attr( $item ); ?>"></option>
                                 <?php endforeach; ?>
                             </datalist>
