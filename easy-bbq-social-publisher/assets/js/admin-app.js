@@ -12,77 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
     let recordedChunks = [];
     let mediaRecorder = null;
 
-    const imageMappings = { ...ebspSettings.defaultImages, ...ebspSettings.customImages };
-    const currentImages = {
-        starter: '',
-        main1: '',
-        main2: ''
-    };
-
     const getFormData = () => {
         return {
             day: document.getElementById('ebsp-day').value,
             starter_title: document.getElementById('ebsp-starter-title').value,
+            starter_prompt: document.getElementById('ebsp-starter-prompt').value,
             main1_title: document.getElementById('ebsp-main1-title').value,
+            main1_prompt: document.getElementById('ebsp-main1-prompt').value,
             main2_title: document.getElementById('ebsp-main2-title').value,
+            main2_prompt: document.getElementById('ebsp-main2-prompt').value,
             drink: document.getElementById('ebsp-drink').value,
             price: document.getElementById('ebsp-price').value,
-            audio: document.getElementById('ebsp-audio').value,
-            images: currentImages
+            audio: document.getElementById('ebsp-audio').value
         };
     };
-
-    const updateImageManager = (field, value) => {
-        const managerDiv = document.getElementById(`ebsp-${field}-image-manager`);
-        if (!managerDiv) return;
-
-        managerDiv.innerHTML = ''; // Clear previous
-
-        if (!value) return;
-
-        if (imageMappings[value]) {
-            currentImages[field] = imageMappings[value];
-            managerDiv.innerHTML = `<span class="ebsp-image-mapped">✅ Image mapped automatically.</span>`;
-        } else {
-            currentImages[field] = '';
-            const btnGen = document.createElement('button');
-            btnGen.type = 'button';
-            btnGen.className = 'button button-secondary';
-            btnGen.innerText = '🪄 Générer la photo par IA';
-            btnGen.onclick = async () => {
-                btnGen.disabled = true;
-                btnGen.innerText = 'Generating...';
-                try {
-                    const response = await fetch(ebspSettings.restUrl + 'generate-dish-image', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-WP-Nonce': ebspSettings.nonce
-                        },
-                        body: JSON.stringify({ dish_name: value })
-                    });
-                    const res = await response.json();
-                    if (response.ok && res.image_url) {
-                        imageMappings[value] = res.image_url;
-                        currentImages[field] = res.image_url;
-                        managerDiv.innerHTML = `<span class="ebsp-image-mapped">✅ IA Image mapped.</span>`;
-                    } else {
-                        managerDiv.innerHTML = `<span style="color:red">Error: ${res.error || 'Unknown error'}</span>`;
-                    }
-                } catch(e) {
-                    managerDiv.innerHTML = `<span style="color:red">Error: ${e.message}</span>`;
-                }
-            };
-            managerDiv.appendChild(btnGen);
-        }
-    };
-
-    document.querySelectorAll('.ebsp-dish-input').forEach(input => {
-        input.addEventListener('change', (e) => {
-            const field = e.target.id.replace('ebsp-', '').replace('-title', '');
-            updateImageManager(field, e.target.value.trim());
-        });
-    });
 
     const generateCaption = async () => {
         statusArea.innerText = 'Generating caption...';
@@ -116,10 +59,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderCanvas = async () => {
         btnGenerate.disabled = true;
-        statusArea.innerText = 'Rendering canvas...';
+        statusArea.innerText = 'Generating images from Imagen 3...';
 
         const data = getFormData();
 
+        try {
+            const response = await fetch(ebspSettings.restUrl + 'generate-images', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-WP-Nonce': ebspSettings.nonce
+                },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+
+            if (response.ok && result.images) {
+                data.images = result.images;
+            }
+        } catch(e) {
+            console.error('Error fetching images', e);
+        }
+
+        statusArea.innerText = 'Rendering canvas...';
         await renderer.render(data);
         modal.classList.remove('hidden');
         statusArea.innerText = 'Visual generated. Review and publish.';
@@ -205,10 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const data = getFormData();
             formData.append('day', data.day);
-            formData.append('starter_title', data.starter_title);
-            formData.append('main1_title', data.main1_title);
-            formData.append('main2_title', data.main2_title);
-            formData.append('drink', data.drink);
             formData.append('caption', captionArea.value);
 
             const response = await fetch(ebspSettings.restUrl + 'publish', {

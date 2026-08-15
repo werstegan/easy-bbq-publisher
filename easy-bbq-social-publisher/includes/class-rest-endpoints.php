@@ -30,9 +30,9 @@ class EBSP_REST_Endpoints {
             'permission_callback' => array( $this, 'check_permission' )
         ) );
 
-        register_rest_route( 'ebsp/v1', '/generate-dish-image', array(
+        register_rest_route( 'ebsp/v1', '/generate-images', array(
             'methods'             => WP_REST_Server::CREATABLE,
-            'callback'            => array( $this, 'generate_single_dish_image' ),
+            'callback'            => array( $this, 'generate_images' ),
             'permission_callback' => array( $this, 'check_permission' )
         ) );
 
@@ -45,12 +45,6 @@ class EBSP_REST_Endpoints {
         register_rest_route( 'ebsp/v1', '/presets', array(
             'methods'             => WP_REST_Server::CREATABLE,
             'callback'            => array( $this, 'update_presets' ),
-            'permission_callback' => array( $this, 'check_permission' )
-        ) );
-
-        register_rest_route( 'ebsp/v1', '/reset-presets', array(
-            'methods'             => WP_REST_Server::CREATABLE,
-            'callback'            => array( $this, 'reset_presets' ),
             'permission_callback' => array( $this, 'check_permission' )
         ) );
     }
@@ -78,77 +72,70 @@ class EBSP_REST_Endpoints {
         return new WP_REST_Response( array( 'message' => 'Presets updated', 'presets' => $presets ), 200 );
     }
 
-    public function reset_presets( WP_REST_Request $request ) {
-        $current_presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
-        $default_presets = EBSP_Admin_Page::get_default_presets();
-
-        $merged_presets = array(
-            'starters' => array_values( array_unique( array_merge( $default_presets['starters'], $current_presets['starters'] ) ) ),
-            'mains'    => array_values( array_unique( array_merge( $default_presets['mains'], $current_presets['mains'] ) ) ),
-            'drinks'   => array_values( array_unique( array_merge( $default_presets['drinks'], $current_presets['drinks'] ) ) )
-        );
-
-        update_option( 'ebsp_presets', $merged_presets );
-
-        return new WP_REST_Response( array( 'message' => 'Presets reset and merged', 'presets' => $merged_presets ), 200 );
-    }
-
-    public function generate_single_dish_image( WP_REST_Request $request ) {
+    public function generate_images( WP_REST_Request $request ) {
         $params = $request->get_json_params();
-        $dish_name = sanitize_text_field( $params['dish_name'] ?? '' );
 
-        if ( empty( $dish_name ) ) {
-            return new WP_REST_Response( array( 'error' => 'Dish name is required.' ), 400 );
+        // Auto-learn new dishes
+        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
+        $updated_presets = false;
+
+        $starter_title = sanitize_text_field( $params['starter_title'] ?? '' );
+        if ( !empty($starter_title) && !in_array($starter_title, $presets['starters']) ) {
+            $presets['starters'][] = $starter_title;
+            $updated_presets = true;
         }
 
-        $prompt = "A delicious professional food photograph of {$dish_name}, traditional Ecuadorian presentation, studio lighting, top-down angle, isolated on clean plate, 8k --no text";
-
-        $res = $this->api_client->generate_image( $prompt );
-
-        if ( is_wp_error( $res ) ) {
-            return new WP_REST_Response( array( 'error' => $res->get_error_message() ), 500 );
+        $main1_title = sanitize_text_field( $params['main1_title'] ?? '' );
+        if ( !empty($main1_title) && !in_array($main1_title, $presets['mains']) ) {
+            $presets['mains'][] = $main1_title;
+            $updated_presets = true;
         }
 
-        // $res is expected to be a base64 string like "data:image/jpeg;base64,..."
-        $base64_data = preg_replace('#^data:image/\w+;base64,#i', '', $res);
-        $image_data = base64_decode($base64_data);
+        $main2_title = sanitize_text_field( $params['main2_title'] ?? '' );
+        if ( !empty($main2_title) && !in_array($main2_title, $presets['mains']) ) {
+            $presets['mains'][] = $main2_title;
+            $updated_presets = true;
+        }
 
-        // Upload to WP Media Library
-        $filename = sanitize_file_name($dish_name) . '-' . time() . '.jpg';
-        $upload_dir = wp_upload_dir();
-        $file_path = $upload_dir['path'] . '/' . $filename;
+        $drink = sanitize_text_field( $params['drink'] ?? '' );
+        if ( !empty($drink) && !in_array($drink, $presets['drinks']) ) {
+            $presets['drinks'][] = $drink;
+            $updated_presets = true;
+        }
 
-        file_put_contents($file_path, $image_data);
+        if ( $updated_presets ) {
+            update_option( 'ebsp_presets', $presets );
+        }
 
-        $file_array = array(
-            'name'     => $filename,
-            'type'     => 'image/jpeg',
-            'tmp_name' => $file_path,
-            'error'    => 0,
-            'size'     => filesize($file_path)
+        $images = array(
+            'starter' => '',
+            'main1'   => '',
+            'main2'   => ''
         );
 
-        $image_url = $this->media_handler->handle_upload( $file_array );
-
-        // Delete temporary file
-        if ( file_exists( $file_path ) ) {
-            unlink( $file_path );
+        if ( !empty( $params['starter_prompt'] ) ) {
+            $res = $this->api_client->generate_image( sanitize_text_field( $params['starter_prompt'] ) );
+            if ( !is_wp_error( $res ) ) {
+                $images['starter'] = $res;
+            }
         }
 
-        if ( is_wp_error( $image_url ) ) {
-            return new WP_REST_Response( array( 'error' => 'Failed to upload generated image: ' . $image_url->get_error_message() ), 500 );
+        if ( !empty( $params['main1_prompt'] ) ) {
+            $res = $this->api_client->generate_image( sanitize_text_field( $params['main1_prompt'] ) );
+            if ( !is_wp_error( $res ) ) {
+                $images['main1'] = $res;
+            }
         }
 
-        // Save mapping with the clean URL, not base64
-        $custom_images = get_option( 'ebsp_dish_images', array() );
-        $custom_images[ $dish_name ] = $image_url;
-        update_option( 'ebsp_dish_images', $custom_images );
+        if ( !empty( $params['main2_prompt'] ) ) {
+            $res = $this->api_client->generate_image( sanitize_text_field( $params['main2_prompt'] ) );
+            if ( !is_wp_error( $res ) ) {
+                $images['main2'] = $res;
+            }
+        }
 
-        return new WP_REST_Response( array( 'image_url' => $image_url ), 200 );
+        return new WP_REST_Response( array( 'images' => $images ), 200 );
     }
-
-    // Keep auto-learning hook in the normal publish/render flow later or as a separate call if needed.
-    // We will do it inside publish_menu to ensure new typed items are added.
 
     public function generate_caption( WP_REST_Request $request ) {
         $params = $request->get_json_params();
@@ -192,26 +179,6 @@ class EBSP_REST_Endpoints {
         $webhook_url = get_option( 'ebsp_webhook_url' );
         if ( empty( $webhook_url ) ) {
             return new WP_REST_Response( array( 'error' => 'Webhook URL not configured.' ), 500 );
-        }
-
-        // Auto-learn new dishes when publishing
-        $presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
-        $updated_presets = false;
-
-        $starter_title = sanitize_text_field( $params['starter_title'] ?? '' );
-        if ( !empty($starter_title) && !in_array($starter_title, $presets['starters']) ) { $presets['starters'][] = $starter_title; $updated_presets = true; }
-
-        $main1_title = sanitize_text_field( $params['main1_title'] ?? '' );
-        if ( !empty($main1_title) && !in_array($main1_title, $presets['mains']) ) { $presets['mains'][] = $main1_title; $updated_presets = true; }
-
-        $main2_title = sanitize_text_field( $params['main2_title'] ?? '' );
-        if ( !empty($main2_title) && !in_array($main2_title, $presets['mains']) ) { $presets['mains'][] = $main2_title; $updated_presets = true; }
-
-        $drink = sanitize_text_field( $params['drink'] ?? '' );
-        if ( !empty($drink) && !in_array($drink, $presets['drinks']) ) { $presets['drinks'][] = $drink; $updated_presets = true; }
-
-        if ( $updated_presets ) {
-            update_option( 'ebsp_presets', $presets );
         }
 
         $payload = array(
