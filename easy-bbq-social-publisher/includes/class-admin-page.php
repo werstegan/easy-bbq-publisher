@@ -8,28 +8,6 @@ class EBSP_Admin_Page {
         add_action( 'admin_menu', array( $this, 'add_admin_menu' ) );
         add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
         add_action( 'admin_init', array( $this, 'register_settings' ) );
-        add_action( 'admin_init', array( $this, 'ensure_default_presets' ) );
-    }
-
-    public static function get_default_presets() {
-        return array(
-            'starters' => array(
-                "Crema de calabacín", "Sancocho ecuatoriano", "Sancocho de ternera", "Sancocho de gallina", "Sopa de menestrón de carne", "Caldo de gallina", "Bolón de verde", "Empanadas colombianas", "Arepas rellenas", "Maduro con queso"
-            ),
-            'mains' => array(
-                "Tallarines salteados de ternera con verduras", "Chaulafán ecuatoriano", "Chaulafán mixto", "Sango de camarón con arroz y maduro frito", "Pescado apanado con arroz y ensalada", "Pollo apanado con arroz y puré de patata", "Chuleta de cerdo con arroz y puré de patata", "Bandeja paisa", "Encebollado de pescado", "Guatita tradicional", "Ceviche / Cebiches mixtos", "Bollo de pescado", "Bollo mixto con queso", "Fritada ecuatoriana", "Hornado tradicional", "Chicharrón con choclo", "Chicharrón con yuca", "Churrasco ecuatoriano", "Arroz con menestra y carne asada", "Arroz con menestra, pollo y huevo", "Arroz con pollo", "Arroz con camarón", "Gambas al ajillo", "Bandera ecuatoriana", "Sango de pescado", "Sango de atún", "Tu carne Easy Barbecue en la mesa", "Picadas para compartir"
-            ),
-            'drinks' => array(
-                "Bebida refrescante de frutas", "Bebida refrescante incluida", "Jugo de mora", "Jugo de lulo", "Jugo de maracuyá", "Jugo de guanábana", "Limonada de coco"
-            )
-        );
-    }
-
-    public function ensure_default_presets() {
-        $presets = get_option( 'ebsp_presets' );
-        if ( empty( $presets ) ) {
-            update_option( 'ebsp_presets', self::get_default_presets() );
-        }
     }
 
     public function add_admin_menu() {
@@ -130,7 +108,6 @@ class EBSP_Admin_Page {
         <div class="wrap ebsp-admin-wrap">
             <h1>Gestion des Cartes & Plats</h1>
             <p>Manage the preset lists for Starters, Main Courses, and Drinks.</p>
-            <button type="button" id="ebsp-btn-reset-presets" class="button button-secondary">🔄 Réinitialiser / Recharger la liste par défaut</button>
 
             <div class="ebsp-presets-layout">
                 <div class="ebsp-preset-section" data-type="starters">

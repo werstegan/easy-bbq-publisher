@@ -29,30 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const resetPresets = async () => {
-        try {
-            statusArea.innerText = 'Resetting presets...';
-            const response = await fetch(ebspSettings.restUrl + 'reset-presets', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-WP-Nonce': ebspSettings.nonce
-                }
-            });
-            const data = await response.json();
-            if (response.ok) {
-                currentPresets = data.presets;
-                renderPresets();
-                statusArea.innerText = 'Presets successfully reset and merged.';
-                setTimeout(() => statusArea.innerText = '', 3000);
-            } else {
-                statusArea.innerText = 'Error resetting presets.';
-            }
-        } catch (e) {
-            statusArea.innerText = 'Error: ' + e.message;
-        }
-    };
-
     const savePresets = async () => {
         try {
             statusArea.innerText = 'Saving...';
@@ -109,15 +85,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
     };
-
-    const btnReset = document.getElementById('ebsp-btn-reset-presets');
-    if (btnReset) {
-        btnReset.addEventListener('click', () => {
-            if(confirm("Are you sure? This will add back all default items. Custom items won't be deleted.")) {
-                resetPresets();
-            }
-        });
-    }
 
     document.querySelectorAll('.btn-add-preset').forEach(btn => {
         btn.addEventListener('click', (e) => {

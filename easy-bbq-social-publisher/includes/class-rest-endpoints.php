@@ -47,12 +47,6 @@ class EBSP_REST_Endpoints {
             'callback'            => array( $this, 'update_presets' ),
             'permission_callback' => array( $this, 'check_permission' )
         ) );
-
-        register_rest_route( 'ebsp/v1', '/reset-presets', array(
-            'methods'             => WP_REST_Server::CREATABLE,
-            'callback'            => array( $this, 'reset_presets' ),
-            'permission_callback' => array( $this, 'check_permission' )
-        ) );
     }
 
     public function check_permission() {
@@ -76,21 +70,6 @@ class EBSP_REST_Endpoints {
         update_option( 'ebsp_presets', $presets );
 
         return new WP_REST_Response( array( 'message' => 'Presets updated', 'presets' => $presets ), 200 );
-    }
-
-    public function reset_presets( WP_REST_Request $request ) {
-        $current_presets = get_option( 'ebsp_presets', array( 'starters' => array(), 'mains' => array(), 'drinks' => array() ) );
-        $default_presets = EBSP_Admin_Page::get_default_presets();
-
-        $merged_presets = array(
-            'starters' => array_values( array_unique( array_merge( $default_presets['starters'], $current_presets['starters'] ) ) ),
-            'mains'    => array_values( array_unique( array_merge( $default_presets['mains'], $current_presets['mains'] ) ) ),
-            'drinks'   => array_values( array_unique( array_merge( $default_presets['drinks'], $current_presets['drinks'] ) ) )
-        );
-
-        update_option( 'ebsp_presets', $merged_presets );
-
-        return new WP_REST_Response( array( 'message' => 'Presets reset and merged', 'presets' => $merged_presets ), 200 );
     }
 
     public function generate_images( WP_REST_Request $request ) {
